@@ -24,7 +24,7 @@ def ModifySetupFile(filename, log):
 
     # The first line is the one to be changed.
     if len(lines) < 1:
-        log.write("ModifySetupFile: empty file found: "+filename+"\n")
+        log.write("ModifySetupFile: empty file found: "+filename+"\n\n")
         return
 
     # The line should look like this:
@@ -36,12 +36,12 @@ def ModifySetupFile(filename, log):
     log.write(lines[0].strip()+"\n")
     chunks=lines[0].split("; ")
     if len(chunks) != 4:
-        log.write("ModifySetupFile: couldn't find four chunks in: "+lines[0]+"\n")
+        log.write("ModifySetupFile: couldn't find four chunks in: "+lines[0]+"\n\n")
         return
 
     # If this file has already been processed, the 'fan@' will already be prepended to chunk #1 -- skip it.
     if chunks[1].startswith("fan@"):
-        log.write("ModifySetupFile: file already processed\n")
+        log.write("ModifySetupFile: file already processed\n\n")
         return
 
     chunks[1]="fan@"+chunks[1].strip()  # Prepend the 'fan@'
@@ -49,7 +49,7 @@ def ModifySetupFile(filename, log):
     # Remove the leading '/public'
     chunks[3]=chunks[3].strip()
     if not chunks[3].startswith("/public"):
-        log.write("ModifySetupFile: chunk 4 does not begin with '/public' in: "+lines[0]+"\n")
+        log.write("ModifySetupFile: chunk 4 does not begin with '/public' in: "+lines[0]+"\n\n")
         return
     chunks[3]=chunks[3][7:]
 
@@ -59,10 +59,16 @@ def ModifySetupFile(filename, log):
 
     log.write(lines[0]+"\n")
 
-    # For now, write the updated file as ".new"
-    fd=open(filename+".new", "w")
-    fd.writelines(lines)
-    fd.close()
+    # And write out the updated file
+    try:
+        if os.path.exists(filename):
+            os.rename(filename, filename+".1")
+
+        fd=open(filename, "w")
+        fd.writelines(lines)
+        fd.close()
+    except Exception as e:
+        log.write("ModifySetupFile: Failed due to exception "+str(e)+"\n\n")
 
     return
 
