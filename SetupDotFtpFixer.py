@@ -8,7 +8,7 @@ def ModifySetupFile(filename, log):
     if len(filename) == 0:
         return
 
-    if "setup.ftp" not in filename:
+    if "setup.ftp" not in filename.lower():
         log.write("ModifySetupFile: wrong file supplied: "+filename+"\n")
         return
 
@@ -59,11 +59,19 @@ def ModifySetupFile(filename, log):
 
     log.write(lines[0]+"\n")
 
+    # Recursively rename <filename> to <filename>+".old."<#> where # is the smallest integer possible
+    def RenameToDelete(filename, num):
+        if not os.path.exists(filename):
+            return
+        trial=filename+".old."+str(num)
+        if os.path.exists(trial):
+            RenameToDelete(filename, num+1)
+            return
+        os.rename(filename, trial)
+
     # And write out the updated file
     try:
-        if os.path.exists(filename):
-            os.rename(filename, filename+".1")
-
+        RenameToDelete(filename, 1)
         fd=open(filename, "w")
         fd.writelines(lines)
         fd.close()
@@ -83,7 +91,7 @@ def WalkDirectory(dirname, log):
         return
 
     # First deal with any setup.ftp file present
-    setup=os.path.join(dirname, "setup.ftp")
+    setup=os.path.join(dirname, "SETUP.FTP")
     if os.path.exists(setup):
         ModifySetupFile(setup, log)
 
